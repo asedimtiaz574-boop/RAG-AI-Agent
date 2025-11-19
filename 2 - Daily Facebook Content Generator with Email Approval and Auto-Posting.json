@@ -1,0 +1,789 @@
+{
+  "name": "2 - Daily Facebook Content Generator with Email Approval and Auto-Posting",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 16
+            }
+          ]
+        }
+      },
+      "id": "a63ade90-01fd-4529-9fdd-fd7d87b72341",
+      "name": "Daily Trigger at 4 PM PST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -9184,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "approvalEmail",
+              "value": "aiml6thnov25n8n@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "facebookEmail",
+              "value": "14thsep2025@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "sheetName",
+              "value": "Social Media Posts",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "topicColumn",
+              "value": "topic",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "commentColumn",
+              "value": "comment",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "imageWidth",
+              "value": 1200,
+              "type": "number"
+            },
+            {
+              "id": "id-7",
+              "name": "imageHeight",
+              "value": 630,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "3187af13-0b9e-41f2-96d4-3a6f07e90964",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -8992,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1pzLHbcqYshFcA1S88yZnnnM3NKUIqj0m61dej9lXBJE",
+          "mode": "list",
+          "cachedResultName": "Social Media Posts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pzLHbcqYshFcA1S88yZnnnM3NKUIqj0m61dej9lXBJE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $('Workflow Configuration').first().json.sheetName }}"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Comment"
+            }
+          ]
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A:Z"
+            }
+          }
+        }
+      },
+      "id": "b5e20fb8-8d8f-4bf0-9a5a-b6a1f179e1a9",
+      "name": "Read Unprocessed Topics",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -8800,
+        208
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "uPwBbVX6EimMgeIA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $('Read Unprocessed Topics').item.json.Topic }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "27d7a304-6428-47a5-b9eb-dc2940a9c2c4",
+      "name": "Check If Topics Found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -8608,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "topic",
+              "value": "={{ $('Read Unprocessed Topics').item.json.topic }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "rowNumber",
+              "value": "={{ $json.row_number }}",
+              "type": "number"
+            },
+            {
+              "id": "id-3",
+              "name": "originalData",
+              "value": "={{ $json }}",
+              "type": "object"
+            },
+            {
+              "id": "1ee89b2c-1618-4c75-a47c-40d978f40657",
+              "name": "topic",
+              "value": "={{ $('Read Unprocessed Topics').item.json.topic }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "a9ae22c4-9c33-4a5c-9696-8b44cc03efa2",
+      "name": "Extract Topic Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -8400,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "\"gemini-1.5-flash\"",
+          "mode": "id"
+        },
+        "messages": {
+          "values": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "cb4a8b6b-acd6-44ab-8d85-19e37a7efb02",
+      "name": "Generate Article with Gemini",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -8224,
+        208
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "qpVHji0nNuxyY2HA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://us-central1-aiplatform.googleapis.com/v1/projects/<__PLACEHOLDER_VALUE__Google Cloud Project ID__>/locations/us-central1/publishers/google/models/imagen-3.0-generate-001:predict",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"instances\": [\n    {\n      \"prompt\": \"={{ $json.topic }}\"\n    }\n  ],\n  \"parameters\": {\n    \"sampleCount\": 1,\n    \"aspectRatio\": \"16:9\",\n    \"safetyFilterLevel\": \"block_some\",\n    \"personGeneration\": \"allow_adult\"\n  }\n}",
+        "options": {}
+      },
+      "id": "858d3e80-9a04-47c8-acc0-5e8258bd11c3",
+      "name": "Generate Image with Google Imagen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -9200,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "emailSubject",
+              "value": "=Facebook Post Approval Required: {{ $('Extract Topic Data').first().json.topic }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "emailBody",
+              "value": "=Please review the following content for Facebook posting:\n\nTopic: {{ $('Extract Topic Data').first().json.topic }}\n\nArticle:\n{{ $('Generate Article with Gemini').first().json.message.content }}\n\nImage has been generated and attached.\n\nPlease reply with:\n- APPROVED to post as-is\n- AMEND: [your changes] to request modifications",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "generatedArticle",
+              "value": "={{ $('Generate Article with Gemini').first().json.message.content }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "generatedImage",
+              "value": "={{ $('Generate Image with Google Imagen').first().json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "cd26828d-5c97-4b59-aecf-263fa9c78336",
+      "name": "Prepare Email Content",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -8992,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Workflow Configuration').first().json.approvalEmail }}",
+        "subject": "={{ $json.emailSubject }}",
+        "message": "={{ $json.emailBody }}",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "image"
+              }
+            ]
+          }
+        }
+      },
+      "id": "18316056-4eb6-47b3-96c6-c2d2b4ef4fbb",
+      "name": "Send Approval Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -8800,
+        512
+      ],
+      "webhookId": "12b31963-d50c-4183-b920-f8e7cc7c28c6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GJiybHqYhiCR2S8s",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "limitWaitTime": true,
+        "resumeAmount": 10,
+        "options": {}
+      },
+      "id": "6ae7338c-6833-4665-b727-5dc714164118",
+      "name": "Wait for Email Response",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -8624,
+        512
+      ],
+      "webhookId": "a13f74fb-db56-4e91-9b01-39dc119be6f9"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $('Wait for Email Response').item.json.body }}",
+              "rightValue": "APPROVED",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "2fc3fa13-243b-4740-95bb-67ff17b4624b",
+      "name": "Check Approval Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -8448,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "message",
+              "value": "={{ $('Prepare Email Content').first().json.generatedArticle }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "imageData",
+              "value": "={{ $('Prepare Email Content').first().json.generatedImage }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "e23097cd-6075-45a0-979c-ded508852025",
+      "name": "Prepare Facebook Post Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -8256,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v18.0",
+        "node": "<__PLACEHOLDER_VALUE__Facebook Page ID__>/photos",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "message",
+                "value": "={{ $json.message }}"
+              },
+              {
+                "name": "url",
+                "value": "={{ $json.imageUrl }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "c46fa1e3-068c-4057-b4c8-94f962aac3d1",
+      "name": "Post to Facebook",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        -8096,
+        432
+      ],
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "07mEBAq06mnlfExo",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1pzLHbcqYshFcA1S88yZnnnM3NKUIqj0m61dej9lXBJE",
+          "mode": "list",
+          "cachedResultName": "Social Media Posts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pzLHbcqYshFcA1S88yZnnnM3NKUIqj0m61dej9lXBJE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Social Media Posts",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Extract Topic Data').first().json.rowNumber }}",
+            "Comment": "posted"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Comment",
+              "displayName": "Comment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Facebook",
+              "displayName": "Facebook",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "49bb95d6-9600-449f-bb1f-02396550d1a1",
+      "name": "Update Sheet as Posted",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -7920,
+        432
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "uPwBbVX6EimMgeIA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gemini-1.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Rewrite the article about {{ $('Extract Topic Data').first().json.topic }} with these amendments: {{ $json.body }}. Keep it to 50 words and make it engaging for Facebook."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a2d3e1f4-d31a-41cc-84be-ed5baad9efcf",
+      "name": "Regenerate Article with Amendments",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -8224,
+        608
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "qpVHji0nNuxyY2HA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://us-central1-aiplatform.googleapis.com/v1/projects/<__PLACEHOLDER_VALUE__Google Cloud Project ID__>/locations/us-central1/publishers/google/models/imagen-3.0-generate-001:predict",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"instances\": [{\"prompt\": \"{{ $('Extract Topic Data').first().json.topic }} with amendments: {{ $json.body }}\"}], \"parameters\": {\"sampleCount\": 1, \"aspectRatio\": \"16:9\", \"safetyFilterLevel\": \"block_some\", \"personGeneration\": \"allow_adult\"}}",
+        "options": {}
+      },
+      "id": "486a8a14-fc17-4c78-b636-52afc1fdce7f",
+      "name": "Regenerate Image with Amendments",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -7936,
+        608
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily Trigger at 4 PM PST": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Read Unprocessed Topics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Unprocessed Topics": {
+      "main": [
+        [
+          {
+            "node": "Check If Topics Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Topics Found": {
+      "main": [
+        [
+          {
+            "node": "Extract Topic Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Topic Data": {
+      "main": [
+        [
+          {
+            "node": "Generate Article with Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Article with Gemini": {
+      "main": [
+        [
+          {
+            "node": "Generate Image with Google Imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image with Google Imagen": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email Content": {
+      "main": [
+        [
+          {
+            "node": "Send Approval Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Approval Email": {
+      "main": [
+        [
+          {
+            "node": "Wait for Email Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Email Response": {
+      "main": [
+        [
+          {
+            "node": "Check Approval Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Approval Status": {
+      "main": [
+        [
+          {
+            "node": "Prepare Facebook Post Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Regenerate Article with Amendments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Facebook Post Data": {
+      "main": [
+        [
+          {
+            "node": "Post to Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Facebook": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet as Posted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Regenerate Article with Amendments": {
+      "main": [
+        [
+          {
+            "node": "Regenerate Image with Amendments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Regenerate Image with Amendments": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9f3adcff-b474-4cbe-ad20-2f0dd587eba7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "881f4f4d6ff83ac81b85a94e2b795ee47f39eb8b733a7dd412dfac369e47ba7e"
+  },
+  "id": "hSbC3VAvG0r5fOny",
+  "tags": []
+}
