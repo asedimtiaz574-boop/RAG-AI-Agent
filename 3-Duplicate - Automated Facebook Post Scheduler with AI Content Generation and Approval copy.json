@@ -1,0 +1,624 @@
+{
+  "name": "3-Duplicate - Automated Facebook Post Scheduler with AI Content Generation and Approval copy",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "approvalEmail",
+              "value": "aiml6thnov25n8n@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "sheetName",
+              "value": "Social Media Posts",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "c6b115ff-eff3-4e51-ba7a-adba54d9b836",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3504,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "f62af31e-8d8f-4e95-9aa4-6610680e2c71",
+      "name": "Schedule - 6 AM (Approval Email)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3056,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 16 * * *"
+            }
+          ]
+        }
+      },
+      "id": "6e49aca6-a2a1-4f08-80cf-8a6279d08fa7",
+      "name": "Schedule - 4 PM (Post Time)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3040,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1pzLHbcqYshFcA1S88yZnnnM3NKUIqj0m61dej9lXBJE",
+          "mode": "list",
+          "cachedResultName": "Social Media Posts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pzLHbcqYshFcA1S88yZnnnM3NKUIqj0m61dej9lXBJE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Social Media Posts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pzLHbcqYshFcA1S88yZnnnM3NKUIqj0m61dej9lXBJE/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "ad6e474b-992b-4a5d-9cc5-6f4735db49cc",
+      "name": "Read Next Unposted Topic",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3696,
+        144
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "uPwBbVX6EimMgeIA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "id": "64829937-a784-48e6-8a04-a61cc74214c1",
+      "name": "Merge Text and Image",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3568,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Workflow Configuration').first().json.approvalEmail }}",
+        "subject": "=APPROVAL REQUIRED: Facebook Post for \"{{ $json.topic }}\"",
+        "message": "=<h2>Facebook Post Approval Required</h2>\n<p><strong>Topic:</strong> {{ $json.topic }}</p>\n<hr>\n<h3>Generated Post Text:</h3>\n<p>{{ $json.generatedText }}</p>\n<hr>\n<h3>Action Required:</h3>\n<p>Please review the generated post and choose one of the following options:</p>\n<ul>\n<li><strong>APPROVE:</strong> Reply with \"APPROVE\" to post this content as-is</li>\n<li><strong>AMEND:</strong> Reply with \"AMEND: [your changes]\" to request modifications</li>\n</ul>\n<p><em>This post is scheduled to be published at 4 PM if approved.</em></p>",
+        "options": {}
+      },
+      "id": "120ce610-49a5-4923-bf89-93cbbd428b8f",
+      "name": "Send Approval Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        4144,
+        272
+      ],
+      "webhookId": "7e1cb82f-9373-4e33-8b6a-c72652bc6d0d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GJiybHqYhiCR2S8s",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v19.0",
+        "node": "me",
+        "edge": "photos",
+        "sendBinaryData": true,
+        "binaryPropertyName": "data",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "caption",
+                "value": "={{ $json.generatedText }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "378c0e4a-a3e5-4c20-b88f-deee3bdfe1ac",
+      "name": "Post to Facebook",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        4288,
+        608
+      ],
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "07mEBAq06mnlfExo",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Workflow Configuration').first().json.sheetName }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.rowNumber }}",
+            "comment": "posted"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "comment",
+              "displayName": "comment",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "23eb65f0-a511-4c56-a87e-ca422a499e11",
+      "name": "Update Sheet - Mark as Posted",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4400,
+        448
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "uPwBbVX6EimMgeIA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "eb041748-d356-46c0-8b22-77b0be0af941",
+      "name": "Merge Schedules",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3312,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "rowNumber",
+              "value": "={{ $json.row_number }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "topic",
+              "value": "={{ $json.topic }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "6f5d7120-6294-4d31-94eb-cfe9dbf06b58",
+      "name": "Store Row ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3872,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "generatedText",
+              "value": "={{ $json.output[0].content[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "imageUrl",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "scheduleHour",
+              "value": "={{ $now.hour }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "7d0b822f-d2b2-4ef7-8bc1-f53e3cb1b370",
+      "name": "Store Generated Content",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3776,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "generatedText",
+              "value": "={{ $json.output[0].content[0].text || $json.generatedText }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "imageUrl",
+              "value": "={{ $binary.data?.url || $json.imageUrl }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "5ac057ae-f79c-48f0-806a-5afef656a0be",
+      "name": "Prepare Facebook Post Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4144,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.scheduleHour }}",
+              "rightValue": "12",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6ce066ad-2e2a-4856-a70e-d3d35f025977",
+      "name": "Check Which Schedule Triggered",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3968,
+        384
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "a519bbd2-d540-4467-91b0-44665158513f",
+      "name": "End - Approval Sent",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4320,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "=Create a clean, professional Facebook-optimized thumbnail (1200 × 630 px) based on the topic: {{ $json.topic }}.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        3296,
+        544
+      ],
+      "id": "4d289b47-9359-4577-bffd-9e0324ed8f2f",
+      "name": "Generate an image1",
+      "credentials": {
+        "openAiApi": {
+          "id": "wgDFUVe3abpny7Sb",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "GPT-3.5-TURBO"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Write a concise, engaging 50-word Facebook post about the topic: {{ $json.topic }}. Create content suitable for a general audience, friendly tone, use hashtags."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        3264,
+        368
+      ],
+      "id": "0f026029-313a-4ba4-b752-ebac5690c9e5",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wgDFUVe3abpny7Sb",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule - 6 AM (Approval Email)": {
+      "main": [
+        [
+          {
+            "node": "Merge Schedules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule - 4 PM (Post Time)": {
+      "main": [
+        [
+          {
+            "node": "Merge Schedules",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Schedules": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Read Next Unposted Topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Next Unposted Topic": {
+      "main": [
+        [
+          {
+            "node": "Store Row ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Row ID": {
+      "main": [
+        [
+          {
+            "node": "Generate an image1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Facebook": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet - Mark as Posted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Text and Image": {
+      "main": [
+        [
+          {
+            "node": "Store Generated Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Generated Content": {
+      "main": [
+        [
+          {
+            "node": "Check Which Schedule Triggered",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Which Schedule Triggered": {
+      "main": [
+        [
+          {
+            "node": "Send Approval Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Facebook Post Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Approval Email": {
+      "main": [
+        [
+          {
+            "node": "End - Approval Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Facebook Post Data": {
+      "main": [
+        [
+          {
+            "node": "Post to Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image1": {
+      "main": [
+        [
+          {
+            "node": "Merge Text and Image",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Merge Text and Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3d9291b4-c49d-4425-852f-3e7f90369403",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "881f4f4d6ff83ac81b85a94e2b795ee47f39eb8b733a7dd412dfac369e47ba7e"
+  },
+  "id": "ruc6pj3uURb9AHOV",
+  "tags": []
+}
