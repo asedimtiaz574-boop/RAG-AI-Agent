@@ -1,0 +1,442 @@
+{
+  "name": "1 - Auto-Generate and Publish Social Media Posts from Google Sheet Topics with Email Approval",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            },
+            {
+              "triggerAtHour": 17
+            }
+          ]
+        }
+      },
+      "id": "32e5392e-5424-49ab-82e4-866cc4f6777c",
+      "name": "Schedule Twice Daily",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -3728,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "approvalEmail",
+              "value": "<__PLACEHOLDER_VALUE__Your email address for approval__>",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "googleSheetId",
+              "value": "<__PLACEHOLDER_VALUE__Google Sheet ID__>",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "sheetName",
+              "value": "<__PLACEHOLDER_VALUE__Sheet name (e.g., Topics)__>",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "facebookPageId",
+              "value": "<__PLACEHOLDER_VALUE__Facebook Page ID__>",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "instagramAccountId",
+              "value": "<__PLACEHOLDER_VALUE__Instagram Business Account ID__>",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "linkedInPersonUrn",
+              "value": "<__PLACEHOLDER_VALUE__LinkedIn Person URN__>",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "e6b81c0c-539f-499c-8de1-67f1fd215d76",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3504,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "options": {}
+      },
+      "id": "41a95aec-d69b-488d-8631-925a7d504f28",
+      "name": "Get Topic from Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -3312,
+        -64
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "uPwBbVX6EimMgeIA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "GPT-3.5-TURBO"
+        },
+        "responses": {
+          "values": [
+            {}
+          ]
+        },
+        "builtInTools": {
+          "fileSearch": {
+            "vectorStoreIds": "[]"
+          }
+        },
+        "options": {}
+      },
+      "id": "14400e69-b4c9-4889-a6f0-d2745880e97b",
+      "name": "Generate Post Content",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        -3136,
+        -64
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "wgDFUVe3abpny7Sb",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/generations",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"dall-e-3\",\n  \"prompt\": \"Create a professional, eye-catching thumbnail image for a social media post about: {{ $('Get Topic from Google Sheet').first().json.A }}\",\n  \"n\": 1,\n  \"size\": \"1024x1024\"\n}",
+        "options": {}
+      },
+      "id": "b0bfb12b-e511-4b47-bc99-4f48a2ec6a72",
+      "name": "Generate Thumbnail with DALL-E",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -2832,
+        -48
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "wgDFUVe3abpny7Sb",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "postContent",
+              "value": "={{ $('Generate Post Content').first().json.message.content }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "thumbnailUrl",
+              "value": "={{ $('Generate Thumbnail with DALL-E').first().json.data[0].url }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "topic",
+              "value": "={{ $('Get Topic from Google Sheet').first().json.A }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "ac57398e-7c43-4ce4-8425-e6ed3818ad9a",
+      "name": "Prepare Email Draft",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3696,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "={{ $('Workflow Configuration').first().json.approvalEmail }}",
+        "subject": "Social Media Post Draft - Approval Required",
+        "message": "=<h2>Social Media Post Draft</h2><p><strong>Topic:</strong> {{ $json.topic }}</p><p><strong>Post Content (100 words):</strong></p><p>{{ $json.postContent }}</p><p><strong>Thumbnail:</strong></p><img src=\"{{ $json.thumbnailUrl }}\" style=\"max-width: 400px;\"><hr><p>Please review and approve this post. Click the approval link in the next email to publish.</p>",
+        "options": {
+          "limitWaitTime": {
+            "values": {
+              "resumeAmount": 120,
+              "resumeUnit": "minutes"
+            }
+          }
+        }
+      },
+      "id": "360f6b91-2a55-4d70-971d-514c8d829b92",
+      "name": "Send Draft Email for Approval",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -3456,
+        208
+      ],
+      "webhookId": "6b033281-3d3c-4beb-9fd4-8c9d674575a4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GJiybHqYhiCR2S8s",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {
+          "responseData": "Post approved and will be published to all platforms"
+        }
+      },
+      "id": "5a232080-b7ea-49c5-bfa7-b7b81b7a37b5",
+      "name": "Wait for Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -3264,
+        224
+      ],
+      "webhookId": "9cdbdf8f-0768-4f53-8d9a-8f5e1d59cde8"
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v18.0",
+        "node": "={{ $('Workflow Configuration').first().json.facebookPageId }}",
+        "edge": "feed",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "message",
+                "value": "={{ $('Prepare Email Draft').first().json.postContent }}"
+              },
+              {}
+            ]
+          }
+        }
+      },
+      "id": "3f0e09a1-1131-40d2-afe0-1b11e3de97c9",
+      "name": "Post to Facebook",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        -2960,
+        160
+      ],
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "07mEBAq06mnlfExo",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v18.0/{{ $('Workflow Configuration').first().json.instagramAccountId }}/media",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "image_url",
+              "value": "={{ $('Prepare Email Draft').first().json.thumbnailUrl }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $('Prepare Email Draft').first().json.postContent }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "55ee8104-95a8-425c-bf4a-e4662abf5c8c",
+      "name": "Post to Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -2784,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "person": "={{ $('Workflow Configuration').first().json.linkedInPersonUrn }}",
+        "text": "={{ $('Prepare Email Draft').first().json.postContent }}",
+        "additionalFields": {}
+      },
+      "id": "ebafe4df-a0be-48f6-88ef-3d47c5d84a0e",
+      "name": "Post to LinkedIn",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        -2960,
+        400
+      ],
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "3P9kzjhcRKOnZPCV",
+          "name": "LinkedIn account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Twice Daily": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Get Topic from Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Topic from Google Sheet": {
+      "main": [
+        [
+          {
+            "node": "Generate Post Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Post Content": {
+      "main": [
+        [
+          {
+            "node": "Generate Thumbnail with DALL-E",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Thumbnail with DALL-E": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email Draft": {
+      "main": [
+        [
+          {
+            "node": "Send Draft Email for Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Draft Email for Approval": {
+      "main": [
+        [
+          {
+            "node": "Wait for Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Approval": {
+      "main": [
+        [
+          {
+            "node": "Post to Facebook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Post to Instagram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Post to LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2dce4fe4-557f-4b00-b142-266b908a11a2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "881f4f4d6ff83ac81b85a94e2b795ee47f39eb8b733a7dd412dfac369e47ba7e"
+  },
+  "id": "vfVyj96pxmr2gYrb",
+  "tags": []
+}
